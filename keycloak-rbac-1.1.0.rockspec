@@ -1,5 +1,5 @@
 package = "keycloack-rbac"
-version = "1.1.0-0"
+version = "1.1.0"
 source = {
     url = "git://github.com/kelvinwierks/keycloak-rbac",
     tag = "v1.1.0",
