@@ -93,6 +93,20 @@ local function do_rbac_check(conf)
   return false, {status = 500, message = "something went wrong"}
 end
 
+local function compare_realms_from_url_and_token(conf)
+  -- get tenant/realm name from issuer in JWT token
+  local claims = check_token(conf)
+  local iss = claims['iss']
+  local jwt_realm = iss:sub(iss:find("/[^/]*$") + 1)
+
+ -- get tenant/realm name from url 
+ local router_matches = ngx.ctx.router_matches
+ local url_realm = router_matches.uri_captures['realm']
+
+ if jwt_realm == url_realm then return true
+else return false, {status = 500, message = "something went wrong with your realm"} end
+
+end
 
 -- constructor
 function KeycloakRBACHandler:new()
@@ -107,12 +121,23 @@ end
 function KeycloakRBACHandler:access(conf)
   KeycloakRBACHandler.super.access(self)
 
-  local ok, err = do_rbac_check(conf)
+  kong.log.err(conf.resource_name)
 
-  if err then
-    return kong.response.exit(err.status, err.errors or { message = err.message })
+  if conf.resource_name ~= nil then --resource name exists, so lets rbac.
+    local ok, err = do_rbac_check(conf)
+
+    if err then
+      return kong.response.exit(err.status, err.errors or { message = err.message })
+    end
   end
 
+  if conf.do_realms_check == "yes" then
+    local ok, err = compare_realms_from_url_and_token(conf)
+
+    if err then
+      return kong.response.exit(err.status, err.errors or { message = err.message })
+    end
+  end
 end
 
 return KeycloakRBACHandler
