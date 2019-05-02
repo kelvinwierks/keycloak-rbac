@@ -1,4 +1,4 @@
-package = "keycloack-rbac"
+package = "keycloak-rbac"
 version = "1.1.0"
 source = {
     url = "git://github.com/kelvinwierks/keycloak-rbac",
